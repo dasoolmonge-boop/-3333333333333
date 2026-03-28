@@ -2,6 +2,8 @@ import os
 import json
 import logging
 import asyncio
+import subprocess
+import sys
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
@@ -125,7 +127,8 @@ async def cmd_admin(message: types.Message):
 
 
 async def on_startup():
-    """Set menu button on startup"""
+    """Actions on bot startup"""
+    # 1. Set menu button
     try:
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(
@@ -136,6 +139,17 @@ async def on_startup():
         logger.info("Menu button configured")
     except Exception as e:
         logger.error(f"Menu button error: {e}")
+
+    # 2. Start Node.js backend
+    try:
+        backend_path = os.path.join(os.getcwd(), "backend", "index.js")
+        if os.path.exists(backend_path):
+            logger.info("Starting Node.js backend...")
+            subprocess.Popen(["node", backend_path], stdout=sys.stdout, stderr=sys.stderr)
+        else:
+            logger.warning(f"Backend file not found at {backend_path}. Skipping backend start.")
+    except Exception as e:
+        logger.error(f"Failed to start Node.js backend: {e}")
 
     me = await bot.get_me()
     logger.info(f"Bot started: @{me.username}")
